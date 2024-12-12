@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inequalities Race Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: linear-gradient(to bottom, #1e3c72, #2a5298);
+      margin: 0;
+      padding: 0;
+      color: white;
+    }
+    h1 {
+      background-color: #ff5733;
+      color: white;
+      padding: 15px;
+      margin: 0;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+    #game-container {
+      max-width: 700px;
+      margin: 20px auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      border-radius: 15px;
+    }
+    #question {
+      font-size: 24px;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+    .answer-button {
+      display: inline-block;
+      margin: 10px;
+      padding: 12px 24px;
+      font-size: 18px;
+      color: white;
+      background-color: #28a745;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .answer-button:hover {
+      background-color: #218838;
+      transform: scale(1.1);
+    }
+    #race-track {
+      margin-top: 30px;
+      position: relative;
+      width: 100%;
+      height: 150px;
+      background: linear-gradient(to bottom, #444, #666);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+    }
+    .car {
+      width: 70px;
+      height: 40px;
+      position: absolute;
+      top: 80px;
+      left: 10px;
+      border-radius: 10px;
+      transform: perspective(500px) rotateX(25deg);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+      background: linear-gradient(to bottom, #ff1e1e, #800000);
+      border: 1px solid #b30000;
+    }
+    .car:before {
+      content: '';
+      position: absolute;
+      bottom: 5px;
+      left: 5px;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, #333, #000);
+      border-radius: 50%;
+    }
+    .car:after {
+      content: '';
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, #333, #000);
+      border-radius: 50%;
+    }
+    .opponent {
+      width: 70px;
+      height: 40px;
+      position: absolute;
+      top: 40px;
+      right: 10px;
+      border-radius: 10px;
+      transform: perspective(500px) rotateX(25deg);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+      background: linear-gradient(to bottom, #1e90ff, #000080);
+      border: 1px solid #0000b3;
+    }
+    .opponent:before {
+      content: '';
+      position: absolute;
+      bottom: 5px;
+      left: 5px;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, #333, #000);
+      border-radius: 50%;
+    }
+    .opponent:after {
+      content: '';
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle, #333, #000);
+      border-radius: 50%;
+    }
+    #fireworks {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+    }
+    #fireworks h1 {
+      color: gold;
+      font-size: 48px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Inequalities Race Game</h1>
+  <div id="game-container">
+    <div id="question"></div>
+    <div id="answers"></div>
+    <div id="race-track">
+      <div class="car" id="player-car"></div>
+      <div class="opponent" id="opponent-car"></div>
+    </div>
+  </div>
+  <div id="fireworks">
+    <h1>Congratulations! You Won!</h1>
+  </div>
+
+  <script>
+    const questions = [
+      { q: "Solve: 48 > 6x", options: ["x < 8", "x > 8", "x = 8"], correct: "x < 8" },
+      { q: "Solve: -3x + 8 > 11", options: ["x < -1", "x > -1", "x = -1"], correct: "x < -1" },
+      { q: "Solve: 15x + 60 < 240", options: ["x < 12", "x > 12", "x = 12"], correct: "x < 12" },
+      { q: "Which inequality is true for x = -1?", options: ["4x + 9 > 20", "-4x - 5 > -15", "-3x + 15 > 18", "-5x - 15 > -2"], correct: "-4x - 5 > -15" },
+      { q: "Xavier needs to bike a minimum of 80 miles this week. He has biked 14 miles. How many miles per day for 6 days?", options: ["x ≥ 12", "x ≥ 11", "x ≤ 10", "x ≥ 10"], correct: "x ≥ 11" }
+    ];
+
+    let currentQuestion = 0;
+    let playerPosition = 10;
+    let opponentPosition = 10;
+    const questionDiv = document.getElementById("question");
+    const answersDiv = document.getElementById("answers");
+    const playerCar = document.getElementById("player-car");
+    const opponentCar = document.getElementById("opponent-car");
+    const fireworksDiv = document.getElementById("fireworks");
+
+    function displayQuestion() {
+      if (currentQuestion < questions.length) {
+        const question = questions[currentQuestion];
+        questionDiv.textContent = question.q;
+        answersDiv.innerHTML = "";
+        question.options.forEach(option => {
+          const button = document.createElement("button");
+          button.textContent = option;
+          button.className = "answer-button";
+          button.onclick = () => checkAnswer(option);
+          answersDiv.appendChild(button);
+        });
+      } else {
+        displayVictory();
+      }
+    }
+
+    function checkAnswer(answer) {
+      const question = questions[currentQuestion];
+      if (answer === question.correct) {
+        currentQuestion++;
+        moveCars();
+        displayQuestion();
+      } else {
+        alert("Wrong answer! Try again.");
+      }
+    }
+
+    function moveCars() {
+      playerPosition += 50;
+      opponentPosition += Math.random() * 30 + 20;
+      playerCar.style.left = playerPosition + "px";
+      opponentCar.style.right = opponentPosition + "px";
+    }
+
+    function displayVictory() {
+      fireworksDiv.style.display = "flex";
+      setTimeout(() => {
+        fireworksDiv.style.display = "none";
+      }, 5000);
+    }
+
+    displayQuestion();
+  </script>
+</body>
+</html>
